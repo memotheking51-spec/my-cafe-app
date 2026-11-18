@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استدعاء النادل</title>
+    <script src="https://unpkg.com"></script>
+    <style>
+        body { font-family: Tahoma, sans-serif; text-align: center; padding: 30px; background: #f4f4f9; }
+        .card { background: white; padding: 25px; border-radius: 15px; max-width: 400px; margin: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .table-badge { background: #ffc107; color: #222; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 22px; display: inline-block; margin-bottom: 15px; }
+        button { width: 100%; padding: 18px; margin: 10px 0; font-size: 18px; border-radius: 10px; border: none; color: white; cursor: pointer; font-weight: bold; }
+        .btn-call { background: #28a745; }
+        .btn-bill { background: #007bff; }
+        .btn-water { background: #17a2b8; }
+        button:active { opacity: 0.8; transform: scale(0.98); }
+        #status { margin-top: 15px; font-weight: bold; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="table-badge" id="tableDisplay">جاري تحديد الطاولة...</div>
+    <p>كيف يمكننا خدمتك اليوم؟</p>
+
+    <button class="btn-call" onclick="sendCall('استدعاء النادل')">🔔 استدعاء النادل</button>
+    <button class="btn-water" onclick="sendCall('طلب مياه')">💧 طلب مياه</button>
+    <button class="btn-bill" onclick="sendCall('طلب الحساب')">🧾 طلب الحساب</button>
+    
+    <div id="status">جاري الاتصال بالنظام...</div>
+</div>
+
+<script>
+    // 1. قراءة رقم الطاولة من الرابط تلقائياً
+    const urlParams = new URLSearchParams(window.location.search);
+    const tableNum = urlParams.get('table') || '1'; // رقم 1 كافتراضي إذا لم يوجد رقم في الرابط
+    const tableName = `طاولة ${tableNum}`;
+    
+    // عرض رقم الطاولة للزبون
+    document.getElementById('tableDisplay').innerText = tableName;
+
+    // 2. الاتصال بالوسيط (نفس الكود السابق)
+    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+    const topic = 'restaurant/tables/calls';
+
+    client.on('connect', () => {
+        document.getElementById('status').innerText = '✅ جاهز لخدمتك';
+        document.getElementById('status').style.color = 'green';
+    });
+
+    function sendCall(actionType) {
+        const payload = JSON.stringify({
+            table: tableName,
+            action: actionType,
+            time: new Date().toLocaleTimeString('ar-EG')
+        });
+
+        client.publish(topic, payload);
+        document.getElementById('status').innerText = `✔️ تم إرسال (${actionType}) للنادل!`;
+    }
+</script>
+
+</body>
+</html>
