@@ -40,7 +40,7 @@
     document.getElementById('tableDisplay').innerText = tableName;
 
     // 2. الاتصال بالوسيط (نفس الكود السابق)
-    const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+    const client = mqtt.connect('wss://://hivemq.com');
     const topic = 'restaurant/tables/calls';
 
     client.on('connect', () => {
@@ -48,16 +48,20 @@
         document.getElementById('status').style.color = 'green';
     });
 
-    function sendCall(actionType) {
-        const payload = JSON.stringify({
-            table: tableName,
-            action: actionType,
-            time: new Date().toLocaleTimeString('ar-EG')
-        });
-
-        client.publish(topic, payload);
-        document.getElementById('status').innerText = `✔️ تم إرسال (${actionType}) للنادل!`;
+  function sendCall(actionType) {
+    if (!client.connected) {
+        alert('النظام غير متصل بالإنترنت حالياً، يرجى الانتظار ثواني والمحاولة مرة أخرى.');
+        return;
     }
+    const payload = JSON.stringify({
+        table: tableName,
+        action: actionType,
+        time: new Date().toLocaleTimeString('ar-EG')
+    });
+
+    client.publish(topic, payload);
+    document.getElementById('status').innerText = `✔️ تم إرسال (${actionType}) للنادل!`;
+}
 </script>
 
 </body>
