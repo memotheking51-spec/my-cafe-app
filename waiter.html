@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>شاشة النادل - الطلبات الواردة</title>
-    <script src="https://unpkg.com"></script>
+    <!-- استخدام سيرفر Cloudflare السريع والمضمون لتحميل المكتبة -->
+    <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: Tahoma, sans-serif; padding: 20px; background: #222; color: white; }
         h2 { text-align: center; }
         .alert-box { background: #333; border-right: 6px solid #ffc107; padding: 15px; margin: 15px auto; max-width: 500px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
         .alert-box.bill { border-right-color: #17a2b8; }
-        button { background: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
-        #conn-status { text-align: center; color: #ffc107; margin-bottom: 20px; }
+        button { background: #dc3545; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #conn-status { text-align: center; color: #ffc107; margin-bottom: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -21,20 +22,34 @@
 <div id="calls-container"></div>
 
 <script>
-   const client = mqtt.connect('wss://mqtt.eclipseprojects.io:443/mqtt');
-    const topic = 'restaurant/tables/calls';
+    const topic = 'my_cafe_egypt_2026/calls';
 
-    client.on('connect', () => {
-        document.getElementById('conn-status').innerText = '🟢 متصل ومستعد لاستقبال الطلبات';
-        document.getElementById('conn-status').style.color = '#28a745';
-        client.subscribe(topic);
-    });
+    if (typeof mqtt !== 'undefined') {
+        const client = mqtt.connect('wss://://hivemq.com', {
+            clientId: 'waiter_' + Math.random().toString(16).substr(2, 8),
+            clean: true
+        });
 
-    client.on('message', (topic, message) => {
-        const data = JSON.parse(message.toString());
-        addCallToScreen(data);
-        playNotificationSound();
-    });
+        client.on('connect', () => {
+            document.getElementById('conn-status').innerText = '🟢 متصل ومستعد لاستقبال الطلبات';
+            document.getElementById('conn-status').style.color = '#28a745';
+            client.subscribe(topic);
+        });
+
+        client.on('message', (topic, message) => {
+            const data = JSON.parse(message.toString());
+            addCallToScreen(data);
+            playNotificationSound();
+        });
+
+        client.on('error', (err) => {
+            document.getElementById('conn-status').innerText = '❌ خطأ في الاتصال: ' + err.message;
+            document.getElementById('conn-status').style.color = 'red';
+        });
+    } else {
+        document.getElementById('conn-status').innerText = '❌ فشل تحميل مكتبة الاتصال.';
+        document.getElementById('conn-status').style.color = 'red';
+    }
 
     function addCallToScreen(data) {
         const container = document.getElementById('calls-container');
@@ -53,14 +68,15 @@
     }
 
     function playNotificationSound() {
-        // صوت تنبيه بسيط باستخدام Web Audio API
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        osc.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.2);
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
+            osc.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.2);
+        } catch (e) {}
     }
 </script>
 
