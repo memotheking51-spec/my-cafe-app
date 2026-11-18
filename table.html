@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>استدعاء النادل</title>
-    <script src="https://unpkg.com"></script>
+    <!-- استخدام سيرفر Cloudflare السريع والمضمون لتحميل المكتبة -->
+    <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: Tahoma, sans-serif; text-align: center; padding: 30px; background: #f4f4f9; }
         .card { background: white; padding: 25px; border-radius: 15px; max-width: 400px; margin: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
@@ -31,37 +32,51 @@
 </div>
 
 <script>
-    // 1. قراءة رقم الطاولة من الرابط تلقائياً
     const urlParams = new URLSearchParams(window.location.search);
-    const tableNum = urlParams.get('table') || '1'; // رقم 1 كافتراضي إذا لم يوجد رقم في الرابط
+    const tableNum = urlParams.get('table') || '1';
     const tableName = `طاولة ${tableNum}`;
-    
-    // عرض رقم الطاولة للزبون
     document.getElementById('tableDisplay').innerText = tableName;
 
-    // 2. الاتصال بالوسيط (نفس الكود السابق)
-    const client = mqtt.connect('wss://mqtt.eclipseprojects.io:443/mqtt');
-    const topic = 'restaurant/tables/calls';
+    const topic = 'my_cafe_egypt_2026/calls';
+    let client = null;
 
-    client.on('connect', () => {
-        document.getElementById('status').innerText = '✅ جاهز لخدمتك';
-        document.getElementById('status').style.color = 'green';
-    });
+    // التأكد من أن المكتبة تم تحميلها بنجاح قبل بدء الاتصال
+    if (typeof mqtt !== 'undefined') {
+        client = mqtt.connect('wss://://hivemq.com', {
+            clientId: 'table_' + Math.random().toString(16).substr(2, 8),
+            clean: true
+        });
 
-  function sendCall(actionType) {
-    if (!client.connected) {
-        alert('النظام غير متصل بالإنترنت حالياً، يرجى الانتظار ثواني والمحاولة مرة أخرى.');
-        return;
+        client.on('connect', () => {
+            document.getElementById('status').innerText = '✅ جاهز لخدمتك';
+            document.getElementById('status').style.color = 'green';
+        });
+
+        client.on('error', (err) => {
+            document.getElementById('status').innerText = '❌ خطأ في الشبكة: ' + err.message;
+            document.getElementById('status').style.color = 'red';
+        });
+    } else {
+        document.getElementById('status').innerText = '❌ فشل تحميل النظام، تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.';
+        document.getElementById('status').style.color = 'red';
     }
-    const payload = JSON.stringify({
-        table: tableName,
-        action: actionType,
-        time: new Date().toLocaleTimeString('ar-EG')
-    });
 
-    client.publish(topic, payload);
-    document.getElementById('status').innerText = `✔️ تم إرسال (${actionType}) للنادل!`;
-}
+    function sendCall(actionType) {
+        if (!client || !client.connected) {
+            alert('النظام غير متصل حالياً، يرجى الانتظار ثواني أو تحديث الصفحة.');
+            return;
+        }
+
+        const payload = JSON.stringify({
+            table: tableName,
+            action: actionType,
+            time: new Date().toLocaleTimeString('ar-EG')
+        });
+
+        client.publish(topic, payload);
+        document.getElementById('status').innerText = `✔️ تم إرسال (${actionType}) للنادل!`;
+        document.getElementById('status').style.color = '#007bff';
+    }
 </script>
 
 </body>
