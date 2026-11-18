@@ -21,7 +21,7 @@
 <div id="calls-container"></div>
 
 <script>
-    const client = mqtt.connect('wss://://hivemq.com');
+   const client = mqtt.connect('wss://mqtt.eclipseprojects.io:443/mqtt');
     const topic = 'restaurant/tables/calls';
 
     client.on('connect', () => {
